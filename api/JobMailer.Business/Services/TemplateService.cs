@@ -1,0 +1,69 @@
+using System.Text.RegularExpressions;
+using JobMailer.Business.Abstractions;
+using JobMailer.Business.Exceptions;
+using JobMailer.Business.Models;
+using JobMailer.Data.Entities;
+using JobMailer.Data.Repositories;
+
+namespace JobMailer.Business.Services;
+
+public sealed class TemplateService(
+    IProfileRepository profiles,
+    ITemplateRepository templates) : ITemplateService
+{
+    private static readonly Regex PlaceholderPattern = new(
+        @"\{\{\s*(?<name>[a-zA-Z0-9_]+)\s*\}\}",
+        RegexOptions.Compiled);
+
+    public async Task<IReadOnlyList<TemplateDto>> GetTemplatesAsync(CancellationToken cancellationToken = default)
+    {
+        var list = await templates.GetAllAsync(cancellationToken);
+        return list.Select(x => new TemplateDto(x.Id, x.Key, x.Subject, x.Body)).ToList();
+    }
+
+    public async Task<RenderedEmail> RenderAsync(
+        int userId,
+        RenderEmailRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var profile = await profiles.GetByIdAsync(request.ProfileId, userId, cancellationToken)
+            ?? throw new NotFoundException("Profile not found.");
+        var template = await templates.GetByIdAsync(request.TemplateId, cancellationToken)
+            ?? throw new NotFoundException("Template not found.");
+
+        var values = BuildValues(profile, template, request.Company, request.JobTitle);
+
+        return new RenderedEmail(
+            ReplacePlaceholders(template.Subject, values),
+            ReplacePlaceholders(template.Body, values));
+    }
+
+    private static Dictionary<string, string> BuildValues(
+        Profile profile,
+        Template template,
+        string? company,
+        string? jobTitle)
+    {
+        var firstName = profile.FullName.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault()
+            ?? profile.FullName.Trim();
+
+        return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["CompanyName"] = string.IsNullOrWhiteSpace(company) ? "your company" : company.Trim(),
+            ["JobTitle"] = string.IsNullOrWhiteSpace(jobTitle) ? profile.Title : jobTitle.Trim(),
+            ["FullName"] = profile.FullName,
+            ["FirstName"] = firstName,
+            ["ProfileTitle"] = profile.Title,
+            ["Phone"] = profile.Phone,
+            ["Email"] = profile.Email,
+            ["TemplateName"] = template.Key
+        };
+    }
+
+    private static string ReplacePlaceholders(string text, IReadOnlyDictionary<string, string> values) =>
+        PlaceholderPattern.Replace(text, match =>
+        {
+            var name = match.Groups["name"].Value;
+            return values.TryGetValue(name, out var value) ? value : match.Value;
+        });
+}

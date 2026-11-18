@@ -1,0 +1,16 @@
+# Build output
+bin/
+obj/
+dist/
+
+# Dependencies
+node_modules/
+
+# Local configuration and secrets
+web/.env
+*.user
+*.suo
+.vs/
+
+# Data Protection key ring (regenerate per machine)
+api/JobMailer.Api/keys/
