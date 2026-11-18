@@ -1,0 +1,12 @@
+{
+  "name": "jobmailer",
+  "private": true,
+  "version": "1.0.0",
+  "description": "JobMailer full-stack application",
+  "scripts": {
+    "build": "npm --prefix web run build",
+    "dev": "npm --prefix web run dev",
+    "preview": "npm --prefix web run preview",
+    "install:web": "npm --prefix web install"
+  }
+}

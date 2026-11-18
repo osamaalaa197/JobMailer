@@ -136,12 +136,12 @@ Swagger UI: <http://localhost:5080/swagger> (Development only). Health check:
 Terminal 2 — web:
 
 ```powershell
-Set-Location web
-npm install
+npm run install:web
 npm run dev
 ```
 
-Open <http://localhost:5173>.
+Open <http://localhost:5173>. The root `package.json` delegates `dev`, `build`, and `preview` to
+`web`, so these commands work from the repository root.
 
 ## Authentication flow
 
@@ -208,6 +208,5 @@ renewal. `prompt=consent` guarantees a new refresh token on every sign-in.
 
 ```powershell
 dotnet build JobMailer.sln
-Set-Location web
 npm run build
 ```
