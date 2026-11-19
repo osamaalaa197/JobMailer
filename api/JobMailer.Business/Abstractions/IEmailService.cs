@@ -6,6 +6,12 @@ public interface ITemplateService
 {
     Task<IReadOnlyList<TemplateDto>> GetTemplatesAsync(CancellationToken cancellationToken = default);
 
+    Task<int> CreateTemplateAsync(TemplateInput input, CancellationToken cancellationToken = default);
+
+    Task UpdateTemplateAsync(int templateId, TemplateInput input, CancellationToken cancellationToken = default);
+
+    Task DeleteTemplateAsync(int templateId, CancellationToken cancellationToken = default);
+
     Task<RenderedEmail> RenderAsync(int userId, RenderEmailRequest request, CancellationToken cancellationToken = default);
 }
 

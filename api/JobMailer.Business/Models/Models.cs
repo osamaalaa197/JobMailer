@@ -25,6 +25,8 @@ public sealed record ProfileInput(
 
 public sealed record TemplateDto(int Id, string Key, string Subject, string Body);
 
+public sealed record TemplateInput(string Key, string Subject, string Body);
+
 public sealed record RenderEmailRequest(int ProfileId, int TemplateId, string? Company, string? JobTitle);
 
 public sealed record RenderedEmail(string Subject, string Body);

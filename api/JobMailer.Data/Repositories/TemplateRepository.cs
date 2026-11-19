@@ -13,4 +13,12 @@ public sealed class TemplateRepository(AppDbContext db) : ITemplateRepository
 
     public Task<Template?> GetByIdAsync(int templateId, CancellationToken cancellationToken = default) =>
         db.Templates.FirstOrDefaultAsync(x => x.Id == templateId, cancellationToken);
+
+    public async Task AddAsync(Template template, CancellationToken cancellationToken = default) =>
+        await db.Templates.AddAsync(template, cancellationToken);
+
+    public void Remove(Template template) => db.Templates.Remove(template);
+
+    public Task SaveChangesAsync(CancellationToken cancellationToken = default) =>
+        db.SaveChangesAsync(cancellationToken);
 }

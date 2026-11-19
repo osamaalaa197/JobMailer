@@ -21,6 +21,75 @@ public sealed class TemplateService(
         return list.Select(x => new TemplateDto(x.Id, x.Key, x.Subject, x.Body)).ToList();
     }
 
+    public async Task<int> CreateTemplateAsync(TemplateInput input, CancellationToken cancellationToken = default)
+    {
+        Validate(input);
+
+        if ((await templates.GetAllAsync(cancellationToken)).Any(x => string.Equals(x.Key, input.Key.Trim(), StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new AppException("A template with this key already exists.");
+        }
+
+        var template = new Template
+        {
+            Key = input.Key.Trim(),
+            Subject = input.Subject.Trim(),
+            Body = input.Body.Trim()
+        };
+
+        await templates.AddAsync(template, cancellationToken);
+        await templates.SaveChangesAsync(cancellationToken);
+        return template.Id;
+    }
+
+    public async Task UpdateTemplateAsync(int templateId, TemplateInput input, CancellationToken cancellationToken = default)
+    {
+        Validate(input);
+
+        var template = await templates.GetByIdAsync(templateId, cancellationToken)
+            ?? throw new NotFoundException("Template not found.");
+
+        if ((await templates.GetAllAsync(cancellationToken)).Any(x =>
+                x.Id != templateId &&
+                string.Equals(x.Key, input.Key.Trim(), StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new AppException("A template with this key already exists.");
+        }
+
+        template.Key = input.Key.Trim();
+        template.Subject = input.Subject.Trim();
+        template.Body = input.Body.Trim();
+
+        await templates.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task DeleteTemplateAsync(int templateId, CancellationToken cancellationToken = default)
+    {
+        var template = await templates.GetByIdAsync(templateId, cancellationToken)
+            ?? throw new NotFoundException("Template not found.");
+
+        templates.Remove(template);
+        await templates.SaveChangesAsync(cancellationToken);
+    }
+
+    private static void Validate(TemplateInput input)
+    {
+        if (string.IsNullOrWhiteSpace(input.Key))
+        {
+            throw new AppException("Template key is required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(input.Subject))
+        {
+            throw new AppException("Template subject is required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(input.Body))
+        {
+            throw new AppException("Template body is required.");
+        }
+    }
+
     public async Task<RenderedEmail> RenderAsync(
         int userId,
         RenderEmailRequest request,

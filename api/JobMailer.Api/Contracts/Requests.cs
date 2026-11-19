@@ -4,10 +4,10 @@ using JobMailer.Business.Models;
 namespace JobMailer.Api.Contracts;
 
 public sealed record ProfileRequest(
-    [property: Required, MaxLength(120)] string Title,
-    [property: Required, MaxLength(200)] string FullName,
-    [property: Required, MaxLength(40)] string Phone,
-    [property: Required, EmailAddress, MaxLength(255)] string Email,
+    [Required, MaxLength(120)] string Title,
+    [Required, MaxLength(200)] string FullName,
+    [Required, MaxLength(40)] string Phone,
+    [Required, EmailAddress, MaxLength(255)] string Email,
     string? CvBase64,
     string? CvFileName)
 {
@@ -15,15 +15,23 @@ public sealed record ProfileRequest(
 }
 
 public sealed record RenderRequest(
-    [property: Range(1, int.MaxValue)] int ProfileId,
-    [property: Range(1, int.MaxValue)] int TemplateId,
+    [Range(1, int.MaxValue)] int ProfileId,
+    [Range(1, int.MaxValue)] int TemplateId,
     string? Company,
     string? JobTitle);
 
 public sealed record SendRequest(
-    [property: Range(1, int.MaxValue)] int ProfileId,
-    [property: Required, EmailAddress] string To,
-    [property: Required, MaxLength(400)] string Subject,
-    [property: Required] string Body,
+    [Range(1, int.MaxValue)] int ProfileId,
+    [Required, EmailAddress] string To,
+    [Required, MaxLength(400)] string Subject,
+    [Required] string Body,
     string? Company,
     string? JobTitle);
+
+public sealed record TemplateRequest(
+    [Required, MaxLength(120)] string Key,
+    [Required, MaxLength(200)] string Subject,
+    [Required] string Body)
+{
+    public TemplateInput ToInput() => new(Key, Subject, Body);
+}

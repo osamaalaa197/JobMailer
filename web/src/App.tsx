@@ -15,9 +15,10 @@ import { useAuth } from "./context/AuthContext";
 import LoginPage from "./pages/LoginPage";
 import ComposePage from "./pages/ComposePage";
 import ProfilesPage from "./pages/ProfilesPage";
+import TemplatesPage from "./pages/TemplatesPage";
 import HistoryPage from "./pages/HistoryPage";
 
-const TAB_NAMES = ["Compose", "Profiles", "History"] as const;
+const TAB_NAMES = ["Compose", "Profiles", "Templates", "History"] as const;
 type TabName = (typeof TAB_NAMES)[number];
 
 export default function App() {
@@ -79,13 +80,15 @@ export default function App() {
           allowScrollButtonsMobile
           sx={{ mb: 3, borderBottom: 1, borderColor: "divider" }}
         >
-          <Tab label="Compose" value="Compose" />
-          <Tab label="Profiles" value="Profiles" />
-          <Tab label="History" value="History" />
+           <Tab label="Compose" value="Compose" />
+           <Tab label="Profiles" value="Profiles" />
+           <Tab label="Templates" value="Templates" />
+           <Tab label="History" value="History" />
         </Tabs>
 
         {tab === "Compose" && <ComposePage />}
         {tab === "Profiles" && <ProfilesPage />}
+        {tab === "Templates" && <TemplatesPage />}
         {tab === "History" && <HistoryPage />}
       </Container>
     </Box>
