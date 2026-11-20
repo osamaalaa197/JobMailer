@@ -130,14 +130,17 @@ export default function TemplatesPage() {
         Templates
       </Typography>
       <Typography color="text.secondary" sx={{ mb: 3 }}>
-        Create and edit the email templates used when composing applications.
+        Create and edit your own email templates. They are private to your account and used when
+        composing applications.
       </Typography>
 
       <Stack spacing={3}>
         {loading && <LinearProgress />}
 
         {!loading && templates.length === 0 && (
-          <Alert severity="info">No templates yet. Create one to start composing emails.</Alert>
+          <Alert severity="info">
+            You have no templates yet. Create one to start composing emails.
+          </Alert>
         )}
 
         {templates.map((template) => (

@@ -51,26 +51,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             entity.Property(x => x.Key).HasMaxLength(120).IsRequired();
             entity.Property(x => x.Subject).HasMaxLength(400).IsRequired();
             entity.Property(x => x.Body).HasColumnType("nvarchar(max)").IsRequired();
-
-            entity.HasData(
-                new Template
-                {
-                    Id = 1,
-                    Key = "Full Stack",
-                    Subject = "Application for {{JobTitle}} - {{FullName}}",
-                    Body = "Dear Hiring Team,\n\nI am excited to apply for the {{JobTitle}} position at {{CompanyName}}. " +
-                           "I specialize in full-stack web applications with React and .NET and would welcome the chance to contribute to your team.\n\n" +
-                           "My CV is attached. You can reach me at {{Phone}} or {{Email}}.\n\nBest regards,\n{{FullName}}"
-                },
-                new Template
-                {
-                    Id = 2,
-                    Key = "GIS",
-                    Subject = "Application for {{JobTitle}} - {{FullName}}",
-                    Body = "Dear Hiring Team,\n\nI am excited to apply for the {{JobTitle}} position at {{CompanyName}}. " +
-                           "I specialize in GIS solutions, spatial data and web mapping and would welcome the chance to contribute to your team.\n\n" +
-                           "My CV is attached. You can reach me at {{Phone}} or {{Email}}.\n\nBest regards,\n{{FullName}}"
-                });
+            entity.HasIndex(x => x.UserId);
+            entity.HasOne(x => x.User)
+                .WithMany(x => x.Templates)
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Application>(entity =>

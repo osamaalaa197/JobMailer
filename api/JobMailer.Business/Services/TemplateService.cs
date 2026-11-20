@@ -15,23 +15,30 @@ public sealed class TemplateService(
         @"\{\{\s*(?<name>[a-zA-Z0-9_]+)\s*\}\}",
         RegexOptions.Compiled);
 
-    public async Task<IReadOnlyList<TemplateDto>> GetTemplatesAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<TemplateDto>> GetTemplatesAsync(
+        int userId,
+        CancellationToken cancellationToken = default)
     {
-        var list = await templates.GetAllAsync(cancellationToken);
+        var list = await templates.GetAllAsync(userId, cancellationToken);
         return list.Select(x => new TemplateDto(x.Id, x.Key, x.Subject, x.Body)).ToList();
     }
 
-    public async Task<int> CreateTemplateAsync(TemplateInput input, CancellationToken cancellationToken = default)
+    public async Task<int> CreateTemplateAsync(
+        int userId,
+        TemplateInput input,
+        CancellationToken cancellationToken = default)
     {
         Validate(input);
 
-        if ((await templates.GetAllAsync(cancellationToken)).Any(x => string.Equals(x.Key, input.Key.Trim(), StringComparison.OrdinalIgnoreCase)))
+        if ((await templates.GetAllAsync(userId, cancellationToken))
+            .Any(x => string.Equals(x.Key, input.Key.Trim(), StringComparison.OrdinalIgnoreCase)))
         {
-            throw new AppException("A template with this key already exists.");
+            throw new AppException("You already have a template with this key.");
         }
 
         var template = new Template
         {
+            UserId = userId,
             Key = input.Key.Trim(),
             Subject = input.Subject.Trim(),
             Body = input.Body.Trim()
@@ -42,18 +49,22 @@ public sealed class TemplateService(
         return template.Id;
     }
 
-    public async Task UpdateTemplateAsync(int templateId, TemplateInput input, CancellationToken cancellationToken = default)
+    public async Task UpdateTemplateAsync(
+        int userId,
+        int templateId,
+        TemplateInput input,
+        CancellationToken cancellationToken = default)
     {
         Validate(input);
 
-        var template = await templates.GetByIdAsync(templateId, cancellationToken)
+        var template = await templates.GetByIdAsync(templateId, userId, cancellationToken)
             ?? throw new NotFoundException("Template not found.");
 
-        if ((await templates.GetAllAsync(cancellationToken)).Any(x =>
+        if ((await templates.GetAllAsync(userId, cancellationToken)).Any(x =>
                 x.Id != templateId &&
                 string.Equals(x.Key, input.Key.Trim(), StringComparison.OrdinalIgnoreCase)))
         {
-            throw new AppException("A template with this key already exists.");
+            throw new AppException("You already have a template with this key.");
         }
 
         template.Key = input.Key.Trim();
@@ -63,9 +74,12 @@ public sealed class TemplateService(
         await templates.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task DeleteTemplateAsync(int templateId, CancellationToken cancellationToken = default)
+    public async Task DeleteTemplateAsync(
+        int userId,
+        int templateId,
+        CancellationToken cancellationToken = default)
     {
-        var template = await templates.GetByIdAsync(templateId, cancellationToken)
+        var template = await templates.GetByIdAsync(templateId, userId, cancellationToken)
             ?? throw new NotFoundException("Template not found.");
 
         templates.Remove(template);
@@ -97,7 +111,7 @@ public sealed class TemplateService(
     {
         var profile = await profiles.GetByIdAsync(request.ProfileId, userId, cancellationToken)
             ?? throw new NotFoundException("Profile not found.");
-        var template = await templates.GetByIdAsync(request.TemplateId, cancellationToken)
+        var template = await templates.GetByIdAsync(request.TemplateId, userId, cancellationToken)
             ?? throw new NotFoundException("Template not found.");
 
         var values = BuildValues(profile, template, request.Company, request.JobTitle);

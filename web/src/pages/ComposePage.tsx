@@ -193,6 +193,13 @@ export default function ComposePage() {
         </Alert>
       )}
 
+      {!loading && templates.length === 0 && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          You need at least one template before you can send an application. Create one on the
+          Templates tab.
+        </Alert>
+      )}
+
       <Card variant="outlined">
         <CardContent>
           <Grid container spacing={2}>

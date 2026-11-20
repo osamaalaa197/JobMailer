@@ -24,5 +24,7 @@ public class User
 
     public ICollection<Profile> Profiles { get; set; } = new List<Profile>();
 
+    public ICollection<Template> Templates { get; set; } = new List<Template>();
+
     public ICollection<Application> Applications { get; set; } = new List<Application>();
 }

@@ -17,7 +17,7 @@ namespace JobMailer.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.8")
+                .HasAnnotation("ProductVersion", "8.0.34")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -142,25 +142,14 @@ namespace JobMailer.Data.Migrations
                         .HasMaxLength(400)
                         .HasColumnType("nvarchar(400)");
 
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
-                    b.ToTable("Templates", (string)null);
+                    b.HasIndex("UserId");
 
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Body = "Dear Hiring Team,\n\nI am excited to apply for the {{JobTitle}} position at {{CompanyName}}. I specialize in full-stack web applications with React and .NET and would welcome the chance to contribute to your team.\n\nMy CV is attached. You can reach me at {{Phone}} or {{Email}}.\n\nBest regards,\n{{FullName}}",
-                            Key = "Full Stack",
-                            Subject = "Application for {{JobTitle}} - {{FullName}}"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Body = "Dear Hiring Team,\n\nI am excited to apply for the {{JobTitle}} position at {{CompanyName}}. I specialize in GIS solutions, spatial data and web mapping and would welcome the chance to contribute to your team.\n\nMy CV is attached. You can reach me at {{Phone}} or {{Email}}.\n\nBest regards,\n{{FullName}}",
-                            Key = "GIS",
-                            Subject = "Application for {{JobTitle}} - {{FullName}}"
-                        });
+                    b.ToTable("Templates", (string)null);
                 });
 
             modelBuilder.Entity("JobMailer.Data.Entities.User", b =>
@@ -231,11 +220,24 @@ namespace JobMailer.Data.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("JobMailer.Data.Entities.Template", b =>
+                {
+                    b.HasOne("JobMailer.Data.Entities.User", "User")
+                        .WithMany("Templates")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("JobMailer.Data.Entities.User", b =>
                 {
                     b.Navigation("Applications");
 
                     b.Navigation("Profiles");
+
+                    b.Navigation("Templates");
                 });
 #pragma warning restore 612, 618
         }

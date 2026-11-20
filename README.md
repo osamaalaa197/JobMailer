@@ -236,7 +236,10 @@ renewal. `prompt=consent` guarantees a new refresh token on every sign-in.
 | POST | `/api/profiles` | Create a profile (CV as base64) |
 | PUT | `/api/profiles/{id}` | Update a profile |
 | DELETE | `/api/profiles/{id}` | Delete a profile |
-| GET | `/api/templates` | List email templates |
+| GET | `/api/templates` | List the user's email templates |
+| POST | `/api/templates` | Create a template for the current user |
+| PUT | `/api/templates/{id}` | Update one of the current user's templates |
+| DELETE | `/api/templates/{id}` | Delete one of the current user's templates |
 | POST | `/api/email/render` | Render subject/body placeholders |
 | POST | `/api/email/send` | Send via Gmail with the profile CV attached |
 | GET | `/api/applications` | Sent-application history |
@@ -254,7 +257,8 @@ renewal. `prompt=consent` guarantees a new refresh token on every sign-in.
 `Profiles` — `Id`, `UserId` (FK), `Title`, `FullName`, `Phone`, `Email`, `CvFileName`, `CvBase64`,
 `CreatedAt`, `UpdatedAt`.
 
-`Templates` — `Id`, `Key`, `Subject`, `Body` (seeded with Full Stack and GIS templates).
+`Templates` — `Id`, `UserId` (FK), `Key`, `Subject`, `Body`. Templates are private to each user;
+new users start with the Full Stack and GIS defaults.
 
 `Applications` — `Id`, `UserId` (FK), `ProfileId`, `ProfileTitle`, `Company`, `JobTitle`, `ToEmail`,
 `Subject`, `SentAt`.

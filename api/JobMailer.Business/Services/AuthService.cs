@@ -7,6 +7,7 @@ using JobMailer.Business.Abstractions;
 using JobMailer.Business.Exceptions;
 using JobMailer.Business.Models;
 using JobMailer.Business.Options;
+using JobMailer.Data;
 using JobMailer.Data.Entities;
 using JobMailer.Data.Repositories;
 using Microsoft.AspNetCore.DataProtection;
@@ -114,6 +115,11 @@ public sealed class AuthService(
                 GoogleId = payload.Subject,
                 CreatedAt = DateTime.UtcNow
             };
+
+            // Every new user gets their own starter templates. Existing users receive copies of the
+            // old global templates through the UserOwnedTemplates migration.
+            TemplateDefaults.AddDefaults(user);
+
             await users.AddAsync(user, cancellationToken);
         }
 
