@@ -188,8 +188,11 @@ Rebuild the SPA after changing `VITE_API_URL`, because Vite embeds it at build t
 the exact API callback URL (`https://your-api-domain.com/api/auth/google/callback`) in Google Cloud
 Console.
 
-Keep the Data Protection key ring (`api/JobMailer.Api/keys`) on persistent storage so encrypted
-Google tokens remain readable after an app restart.
+Keep the Data Protection key ring on persistent storage so encrypted Google tokens remain readable
+after an app restart. Locally it is created in `api/private/keys`; on MonsterASP it is created in
+`private/keys` next to `wwwroot`. Do not enable DPAPI on shared hosting because the application pool
+has no Windows user profile. If the key ring is deleted or replaced, users must sign in with Google
+again. Set `DataProtection__KeysPath` if you need to point it at a different persistent folder.
 
 ## Authentication flow
 
@@ -244,9 +247,10 @@ renewal. `prompt=consent` guarantees a new refresh token on every sign-in.
 
 ## Security notes
 
-- OAuth tokens are encrypted at rest with Data Protection. The key ring lives in
-  `api/JobMailer.Api/keys` and is DPAPI-protected on Windows. Deleting it invalidates stored tokens
-  and forces users to sign in again.
+- OAuth tokens are encrypted at rest with Data Protection. The key ring lives outside the public
+  site root: `api/private/keys` locally and `private/keys` next to `wwwroot` on MonsterASP. DPAPI is
+  intentionally not used because shared hosting has no Windows user profile. Deleting the key ring
+  invalidates stored tokens and forces users to sign in again.
 - JWTs are validated for issuer, audience, lifetime, and signing key.
 - Logout revokes the Google grant rather than only clearing the browser session.
 - CV uploads are limited to PDF/DOC/DOCX and 5 MB (validated on both client and server).

@@ -45,14 +45,18 @@ var connectionString = builder.Configuration.GetConnectionString("Default")
 builder.Services.AddDataAccess(connectionString);
 builder.Services.AddBusinessLogic(builder.Configuration);
 
-var dataProtection = builder.Services.AddDataProtection()
-    .SetApplicationName("JobMailer")
-    .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(builder.Environment.ContentRootPath, "keys")));
-
-if (OperatingSystem.IsWindows())
+// Shared hosting (MonsterASP) has no Windows user profile, so DPAPI is unavailable. Store the key
+// ring in the writable "private" folder next to wwwroot instead, and keep it out of the public root.
+var keysPath = builder.Configuration["DataProtection:KeysPath"];
+if (string.IsNullOrWhiteSpace(keysPath))
 {
-    dataProtection.ProtectKeysWithDpapi();
+    keysPath = Path.Combine(builder.Environment.ContentRootPath, "..", "private", "keys");
 }
+
+builder.Services.AddDataProtection()
+    .SetApplicationName("JobMailer")
+    .PersistKeysToFileSystem(new DirectoryInfo(Path.GetFullPath(keysPath)))
+    .SetDefaultKeyLifetime(TimeSpan.FromDays(90));
 
 var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();
 var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.Key));

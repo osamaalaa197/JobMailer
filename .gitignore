@@ -14,3 +14,5 @@ web/.env
 
 # Data Protection key ring (regenerate per machine)
 api/JobMailer.Api/keys/
+api/private/
+private/
