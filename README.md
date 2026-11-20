@@ -194,6 +194,20 @@ after an app restart. Locally it is created in `api/private/keys`; on MonsterASP
 has no Windows user profile. If the key ring is deleted or replaced, users must sign in with Google
 again. Set `DataProtection__KeysPath` if you need to point it at a different persistent folder.
 
+## 7. Logging and troubleshooting
+
+Serilog writes structured request logs and unhandled-exception stack traces to the console and to a
+daily rolling file outside the public site root:
+
+- Local: `api/private/logs/jobmailer-YYYYMMDD.log`
+- MonsterASP: `private/logs/jobmailer-YYYYMMDD.log` next to `wwwroot`
+
+The default level is `Information`; Microsoft framework logs are reduced to warnings. Override the
+file location with `Diagnostics__LogPath` (for example
+`D:\home\site\private\logs\jobmailer-.log`) and adjust levels in the `Serilog` section of
+`appsettings.json`. Log files are gitignored and are never served by the SPA or static-file
+middleware.
+
 ## Authentication flow
 
 1. The React app sends the browser to `GET /api/auth/google/start`. The API redirects to Google's

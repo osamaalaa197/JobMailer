@@ -8,8 +8,28 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Keep logs outside the public site root, next to the Data Protection keys.
+var logPath = builder.Configuration["Diagnostics:LogPath"];
+if (string.IsNullOrWhiteSpace(logPath))
+{
+    logPath = Path.Combine(builder.Environment.ContentRootPath, "..", "private", "logs", "jobmailer-.log");
+}
+logPath = Path.GetFullPath(logPath);
+
+builder.Host.UseSerilog((context, services, configuration) => configuration
+    .ReadFrom.Configuration(context.Configuration)
+    .ReadFrom.Services(services)
+    .Enrich.FromLogContext()
+    .WriteTo.Console()
+    .WriteTo.File(
+        logPath,
+        rollingInterval: RollingInterval.Day,
+        retainedFileCountLimit: 14,
+        shared: true));
 
 builder.Services.AddControllers();
 builder.Services.AddProblemDetails();
@@ -90,6 +110,12 @@ builder.Services.AddHostedService<DatabaseInitializerHostedService>();
 
 var app = builder.Build();
 
+app.Logger.LogInformation(
+    "JobMailer API starting. Environment={EnvironmentName}, LogFile={LogFile}",
+    app.Environment.EnvironmentName,
+    logPath);
+
+app.UseSerilogRequestLogging();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseDefaultFiles();
 app.UseStaticFiles();
