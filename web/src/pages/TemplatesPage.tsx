@@ -202,6 +202,7 @@ export default function TemplatesPage() {
                 required
                 multiline
                 minRows={8}
+                helperText="Placeholders: {{ReceiverName}}, {{FullName}}, {{FirstName}}, {{JobTitle}}, {{CompanyName}}, {{ProfileTitle}}, {{Phone}}, {{Email}}"
               />
               <Stack direction="row" spacing={1}>
                 <Button

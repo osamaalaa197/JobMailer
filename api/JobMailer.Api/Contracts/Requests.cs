@@ -18,7 +18,8 @@ public sealed record RenderRequest(
     [Range(1, int.MaxValue)] int ProfileId,
     [Range(1, int.MaxValue)] int TemplateId,
     string? Company,
-    string? JobTitle);
+    string? JobTitle,
+    [MaxLength(200)] string? ReceiverName);
 
 public sealed record SendRequest(
     [Range(1, int.MaxValue)] int ProfileId,

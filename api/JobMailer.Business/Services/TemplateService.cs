@@ -114,7 +114,12 @@ public sealed class TemplateService(
         var template = await templates.GetByIdAsync(request.TemplateId, userId, cancellationToken)
             ?? throw new NotFoundException("Template not found.");
 
-        var values = BuildValues(profile, template, request.Company, request.JobTitle);
+        var values = BuildValues(
+            profile,
+            template,
+            request.Company,
+            request.JobTitle,
+            request.ReceiverName);
 
         return new RenderedEmail(
             ReplacePlaceholders(template.Subject, values),
@@ -125,7 +130,8 @@ public sealed class TemplateService(
         Profile profile,
         Template template,
         string? company,
-        string? jobTitle)
+        string? jobTitle,
+        string? receiverName)
     {
         var firstName = profile.FullName.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault()
             ?? profile.FullName.Trim();
@@ -134,6 +140,7 @@ public sealed class TemplateService(
         {
             ["CompanyName"] = string.IsNullOrWhiteSpace(company) ? "your company" : company.Trim(),
             ["JobTitle"] = string.IsNullOrWhiteSpace(jobTitle) ? profile.Title : jobTitle.Trim(),
+            ["ReceiverName"] = string.IsNullOrWhiteSpace(receiverName) ? "Hiring Manager" : receiverName.Trim(),
             ["FullName"] = profile.FullName,
             ["FirstName"] = firstName,
             ["ProfileTitle"] = profile.Title,

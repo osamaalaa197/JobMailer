@@ -21,7 +21,12 @@ public sealed class EmailController(
     {
         var rendered = await templates.RenderAsync(
             User.GetUserId(),
-            new RenderEmailRequest(request.ProfileId, request.TemplateId, request.Company, request.JobTitle),
+            new RenderEmailRequest(
+                request.ProfileId,
+                request.TemplateId,
+                request.Company,
+                request.JobTitle,
+                request.ReceiverName),
             cancellationToken);
 
         return Ok(rendered);

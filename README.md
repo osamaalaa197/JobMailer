@@ -244,6 +244,13 @@ renewal. `prompt=consent` guarantees a new refresh token on every sign-in.
 | POST | `/api/email/send` | Send via Gmail with the profile CV attached |
 | GET | `/api/applications` | Sent-application history |
 
+### Template placeholders
+
+Templates are rendered with these placeholders: `{{ReceiverName}}`, `{{FullName}}`, `{{FirstName}}`,
+`{{JobTitle}}`, `{{CompanyName}}`, `{{ProfileTitle}}`, `{{Phone}}`, `{{Email}}`, and
+`{{TemplateName}}`. The optional **Receiver name** on the Compose page fills `{{ReceiverName}}`; when
+it is left blank, the placeholder becomes `Hiring Manager`.
+
 ## Data model
 
 `Users`

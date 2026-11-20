@@ -25,6 +25,7 @@ interface ComposeForm {
   templateId: number | "";
   company: string;
   jobTitle: string;
+  receiverName: string;
   to: string;
 }
 
@@ -33,6 +34,7 @@ const emptyForm: ComposeForm = {
   templateId: "",
   company: "",
   jobTitle: "",
+  receiverName: "",
   to: ""
 };
 
@@ -116,6 +118,11 @@ export default function ComposePage() {
     setPreview(null);
   };
 
+  const handleReceiverNameChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setForm((current) => ({ ...current, receiverName: event.target.value }));
+    setPreview(null);
+  };
+
   const handlePreview = async () => {
     if (form.profileId === "" || form.templateId === "") {
       notify("Choose a profile and a template first.", "error");
@@ -128,7 +135,8 @@ export default function ComposePage() {
         profileId: form.profileId,
         templateId: form.templateId,
         company: form.company,
-        jobTitle: form.jobTitle
+        jobTitle: form.jobTitle,
+        receiverName: form.receiverName
       });
       setPreview(data);
     } catch (error) {
@@ -165,7 +173,13 @@ export default function ComposePage() {
       });
       notify("Application sent.");
       setPreview(null);
-      setForm((current) => ({ ...current, company: "", jobTitle: "", to: "" }));
+      setForm((current) => ({
+        ...current,
+        company: "",
+        jobTitle: "",
+        receiverName: "",
+        to: ""
+      }));
     } catch (error) {
       notify(getApiErrorMessage(error), "error");
     } finally {
@@ -255,6 +269,17 @@ export default function ComposePage() {
                 helperText="Defaults to the profile title"
                 value={form.jobTitle}
                 onChange={handleJobTitleChange}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                label="Receiver name (optional)"
+                placeholder="e.g. Ms. Smith"
+                helperText="Fills {{ReceiverName}} in the template; defaults to Hiring Manager"
+                value={form.receiverName}
+                onChange={handleReceiverNameChange}
               />
             </Grid>
 
