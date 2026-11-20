@@ -28,12 +28,17 @@ public sealed class AuthService(
     private readonly ITimeLimitedDataProtector _stateProtector =
         dataProtection.CreateProtector("JobMailer.OAuthState.v1").ToTimeLimitedDataProtector();
 
-    public string CreateGoogleAuthorizationUrl()
+    public string CreateGoogleAuthorizationUrl(string redirectUri)
     {
+        if (string.IsNullOrWhiteSpace(redirectUri))
+        {
+            throw new ArgumentException("A Google redirect URI is required.", nameof(redirectUri));
+        }
+
         var query = new Dictionary<string, string>
         {
             ["client_id"] = _google.ClientId,
-            ["redirect_uri"] = _google.RedirectUri,
+            ["redirect_uri"] = redirectUri,
             ["response_type"] = "code",
             ["scope"] = string.Join(" ", _google.Scopes),
             ["access_type"] = "offline",
@@ -52,11 +57,17 @@ public sealed class AuthService(
     public async Task<LoginResult> HandleGoogleCallbackAsync(
         string code,
         string state,
+        string redirectUri,
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(code))
         {
             throw new AppException("Google authorization code is missing.");
+        }
+
+        if (string.IsNullOrWhiteSpace(redirectUri))
+        {
+            throw new AppException("Google redirect URI is missing.");
         }
 
         ValidateState(state);
@@ -67,7 +78,7 @@ public sealed class AuthService(
             token = await CreateFlow().ExchangeCodeForTokenAsync(
                 userId: string.Empty,
                 code: code,
-                redirectUri: _google.RedirectUri,
+                redirectUri: redirectUri,
                 taskCancellationToken: cancellationToken);
         }
         catch (TokenResponseException ex)

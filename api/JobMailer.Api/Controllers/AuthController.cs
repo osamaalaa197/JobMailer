@@ -12,13 +12,13 @@ namespace JobMailer.Api.Controllers;
 public sealed class AuthController(
     IAuthService auth,
     IConfiguration configuration,
+    IWebHostEnvironment environment,
     ILogger<AuthController> logger) : ControllerBase
 {
-    private string WebUrl => (configuration["Web:Url"] ?? "http://localhost:5173").TrimEnd('/');
-
     [AllowAnonymous]
     [HttpGet("google/start")]
-    public IActionResult StartGoogleLogin() => Redirect(auth.CreateGoogleAuthorizationUrl());
+    public IActionResult StartGoogleLogin() =>
+        Redirect(auth.CreateGoogleAuthorizationUrl(ResolveGoogleRedirectUri()));
 
     [AllowAnonymous]
     [HttpGet("google/callback")]
@@ -39,8 +39,13 @@ public sealed class AuthController(
 
         try
         {
-            var result = await auth.HandleGoogleCallbackAsync(code ?? string.Empty, state ?? string.Empty, cancellationToken);
-            return Redirect($"{WebUrl}/#access_token={Uri.EscapeDataString(result.AccessToken)}");
+            var result = await auth.HandleGoogleCallbackAsync(
+                code ?? string.Empty,
+                state ?? string.Empty,
+                ResolveGoogleRedirectUri(),
+                cancellationToken);
+
+            return Redirect($"{ResolveWebUrl()}/#access_token={Uri.EscapeDataString(result.AccessToken)}");
         }
         catch (AppException ex)
         {
@@ -67,5 +72,50 @@ public sealed class AuthController(
     }
 
     private IActionResult RedirectToLogin(string message) =>
-        Redirect($"{WebUrl}/#error={Uri.EscapeDataString(message)}");
+        Redirect($"{ResolveWebUrl()}/#error={Uri.EscapeDataString(message)}");
+
+    /// <summary>
+    /// Uses the configured URI when it is not a localhost placeholder, otherwise derives it from the
+    /// current request so a same-origin deployment works without extra configuration.
+    /// </summary>
+    private string ResolveGoogleRedirectUri()
+    {
+        var configured = configuration["Google:RedirectUri"];
+
+        if (!string.IsNullOrWhiteSpace(configured)
+            && (!IsLocalhost(configured) || environment.IsDevelopment()))
+        {
+            return configured;
+        }
+
+        return $"{RequestOrigin()}/api/auth/google/callback";
+    }
+
+    /// <summary>
+    /// Uses the configured web URL in development or when it points at a real deployment, otherwise
+    /// redirects back to the current site origin.
+    /// </summary>
+    private string ResolveWebUrl()
+    {
+        var configured = configuration["Web:Url"];
+
+        if (!string.IsNullOrWhiteSpace(configured) && !IsLocalhost(configured))
+        {
+            return configured.TrimEnd('/');
+        }
+
+        if (environment.IsDevelopment() && !string.IsNullOrWhiteSpace(configured))
+        {
+            return configured.TrimEnd('/');
+        }
+
+        return RequestOrigin();
+    }
+
+    private string RequestOrigin() =>
+        $"{Request.Scheme}://{Request.Host}{Request.PathBase}".TrimEnd('/');
+
+    private static bool IsLocalhost(string value) =>
+        Uri.TryCreate(value, UriKind.Absolute, out var uri)
+        && (uri.IsLoopback || uri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase));
 }

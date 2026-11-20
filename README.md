@@ -92,10 +92,15 @@ Notes:
 Copy-Item web/.env.example web/.env
 ```
 
-Set the API URL in `web/.env` (the default already matches the local API):
+No change is needed for local development: the web app defaults to `/api`, and Vite proxies `/api`
+to `http://localhost:5080`. Set `VITE_API_URL` only when the API runs on a different origin:
 
 ```dotenv
-VITE_API_URL=http://localhost:5080/api
+# Same origin as the web app (recommended for production)
+VITE_API_URL=/api
+
+# Separate API host
+# VITE_API_URL=https://your-api-domain.com/api
 ```
 
 ## 4. Database
@@ -142,6 +147,49 @@ npm run dev
 
 Open <http://localhost:5173>. The root `package.json` delegates `dev`, `build`, and `preview` to
 `web`, so these commands work from the repository root.
+
+## 6. Deploy to MonsterASP
+
+The API serves the built SPA from `api/JobMailer.Api/wwwroot`, and `npm run build` writes directly
+there. Publish the `api/JobMailer.Api` project after building the frontend.
+
+For a same-origin deployment, the API derives the Google callback URI and the post-login SPA URL
+from the incoming request. You only need to:
+
+1. Add `https://your-domain.com/api/auth/google/callback` as an authorized redirect URI in Google
+   Cloud Console.
+2. Set the required secrets on MonsterASP:
+
+```text
+ConnectionStrings__Default=Server=...;Database=JobMailer;...
+Google__ClientId=YOUR_CLIENT_ID.apps.googleusercontent.com
+Google__ClientSecret=YOUR_CLIENT_SECRET
+Jwt__Key=A_RANDOM_SECRET_OF_AT_LEAST_32_CHARACTERS
+```
+
+`Web__Url`, `Cors`, and `Google__RedirectUri` are optional for a same-origin deployment, but setting
+them explicitly is recommended:
+
+```text
+Google__RedirectUri=https://your-domain.com/api/auth/google/callback
+Web__Url=https://your-domain.com
+Cors=https://your-domain.com
+```
+
+If the API is hosted on a different domain, set `VITE_API_URL` to its absolute URL before building
+the web app, and set the three values above to match that deployment:
+
+```powershell
+$env:VITE_API_URL = "https://your-api-domain.com/api"
+npm run build
+```
+
+Rebuild the SPA after changing `VITE_API_URL`, because Vite embeds it at build time. Then register
+the exact API callback URL (`https://your-api-domain.com/api/auth/google/callback`) in Google Cloud
+Console.
+
+Keep the Data Protection key ring (`api/JobMailer.Api/keys`) on persistent storage so encrypted
+Google tokens remain readable after an app restart.
 
 ## Authentication flow
 
@@ -210,3 +258,6 @@ renewal. `prompt=consent` guarantees a new refresh token on every sign-in.
 dotnet build JobMailer.sln
 npm run build
 ```
+
+`npm run build` also replaces the React files in `api/JobMailer.Api/wwwroot`, so the API project
+always serves the latest frontend build.

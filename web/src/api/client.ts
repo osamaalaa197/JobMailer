@@ -3,7 +3,9 @@ import type { UserInfo } from "../types";
 
 export const SESSION_STORAGE_KEY = "jobmailer.session";
 export const UNAUTHORIZED_EVENT = "jobmailer:unauthorized";
-export const API_BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:5080/api";
+
+const configuredBaseUrl = import.meta.env.VITE_API_URL?.trim();
+export const API_BASE_URL = (configuredBaseUrl || "/api").replace(/\/+$/, "");
 
 export interface StoredSession {
   accessToken: string;
