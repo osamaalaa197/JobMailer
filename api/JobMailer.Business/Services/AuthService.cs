@@ -195,6 +195,7 @@ public sealed class AuthService(
         }
         catch (Exception ex) when (ex is CryptographicException or FormatException)
         {
+            logger.LogWarning(ex, "OAuth state validation failed. StateLength={StateLength}.", state.Length);
             throw new AppException("Google sign-in session has expired. Please try again.");
         }
     }

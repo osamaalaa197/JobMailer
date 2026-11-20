@@ -17,8 +17,19 @@ public sealed class AuthController(
 {
     [AllowAnonymous]
     [HttpGet("google/start")]
-    public IActionResult StartGoogleLogin() =>
-        Redirect(auth.CreateGoogleAuthorizationUrl(ResolveGoogleRedirectUri()));
+    public IActionResult StartGoogleLogin()
+    {
+        var redirectUri = ResolveGoogleRedirectUri();
+
+        logger.LogInformation(
+            "Starting Google login. Scheme={Scheme}, Host={Host}, ForwardedProto={ForwardedProto}, RedirectUri={RedirectUri}",
+            Request.Scheme,
+            Request.Host.Value,
+            Request.Headers["X-Forwarded-Proto"].ToString(),
+            redirectUri);
+
+        return Redirect(auth.CreateGoogleAuthorizationUrl(redirectUri));
+    }
 
     [AllowAnonymous]
     [HttpGet("google/callback")]
@@ -28,8 +39,20 @@ public sealed class AuthController(
         [FromQuery] string? error,
         CancellationToken cancellationToken)
     {
+        logger.LogInformation(
+            "Google callback received. Scheme={Scheme}, Host={Host}, ForwardedProto={ForwardedProto}, HasCode={HasCode}, HasState={HasState}, HasError={HasError}, RedirectUri={RedirectUri}",
+            Request.Scheme,
+            Request.Host.Value,
+            Request.Headers["X-Forwarded-Proto"].ToString(),
+            !string.IsNullOrWhiteSpace(code),
+            !string.IsNullOrWhiteSpace(state),
+            !string.IsNullOrWhiteSpace(error),
+            ResolveGoogleRedirectUri());
+
         if (!string.IsNullOrWhiteSpace(error))
         {
+            logger.LogWarning("Google returned an OAuth error: {Error}.", error);
+
             var message = error == "access_denied"
                 ? "Google access was denied. JobMailer needs the gmail.send permission to send applications."
                 : "Google sign-in failed. Please try again.";
@@ -49,6 +72,7 @@ public sealed class AuthController(
         }
         catch (AppException ex)
         {
+            logger.LogWarning(ex, "Google callback rejected: {Reason}", ex.Message);
             return RedirectToLogin(ex.Message);
         }
         catch (Exception ex)
