@@ -34,9 +34,18 @@ namespace JobMailer.Data.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
+                    b.Property<DateTime?>("FirstOpenedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("JobTitle")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("LastOpenedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("OpenCount")
+                        .HasColumnType("int");
 
                     b.Property<int?>("ProfileId")
                         .HasColumnType("int");
@@ -59,10 +68,18 @@ namespace JobMailer.Data.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
+                    b.Property<string>("TrackingToken")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TrackingToken")
+                        .IsUnique()
+                        .HasFilter("[TrackingToken] IS NOT NULL");
 
                     b.HasIndex("UserId", "SentAt");
 

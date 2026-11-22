@@ -9,4 +9,9 @@ public interface IApplicationRepository
     Task AddAsync(Application application, CancellationToken cancellationToken = default);
 
     Task SaveChangesAsync(CancellationToken cancellationToken = default);
+
+    Task<bool> RecordOpenAsync(
+        string trackingToken,
+        DateTime openedAt,
+        CancellationToken cancellationToken = default);
 }

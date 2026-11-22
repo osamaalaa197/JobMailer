@@ -21,4 +21,12 @@ public class Application
     public string Subject { get; set; } = string.Empty;
 
     public DateTime SentAt { get; set; }
+
+    public string? TrackingToken { get; set; }
+
+    public DateTime? FirstOpenedAt { get; set; }
+
+    public DateTime? LastOpenedAt { get; set; }
+
+    public int OpenCount { get; set; }
 }

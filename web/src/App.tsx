@@ -13,17 +13,18 @@ import {
 import LogoutIcon from "@mui/icons-material/Logout";
 import { useAuth } from "./context/AuthContext";
 import LoginPage from "./pages/LoginPage";
+import DashboardPage from "./pages/DashboardPage";
 import ComposePage from "./pages/ComposePage";
 import ProfilesPage from "./pages/ProfilesPage";
 import TemplatesPage from "./pages/TemplatesPage";
 import HistoryPage from "./pages/HistoryPage";
 
-const TAB_NAMES = ["Compose", "Profiles", "Templates", "History"] as const;
+const TAB_NAMES = ["Dashboard", "Compose", "Profiles", "Templates", "History"] as const;
 type TabName = (typeof TAB_NAMES)[number];
 
 export default function App() {
   const { user, initializing, logout } = useAuth();
-  const [tab, setTab] = useState<TabName>("Compose");
+  const [tab, setTab] = useState<TabName>("Dashboard");
 
   if (initializing) {
     return (
@@ -72,7 +73,7 @@ export default function App() {
         </Toolbar>
       </AppBar>
 
-      <Container maxWidth="md" sx={{ py: 3 }}>
+      <Container maxWidth="lg" sx={{ py: 3 }}>
         <Tabs
           value={tab}
           onChange={handleTabChange}
@@ -80,12 +81,14 @@ export default function App() {
           allowScrollButtonsMobile
           sx={{ mb: 3, borderBottom: 1, borderColor: "divider" }}
         >
-           <Tab label="Compose" value="Compose" />
-           <Tab label="Profiles" value="Profiles" />
-           <Tab label="Templates" value="Templates" />
-           <Tab label="History" value="History" />
+          <Tab label="Dashboard" value="Dashboard" />
+          <Tab label="Compose" value="Compose" />
+          <Tab label="Profiles" value="Profiles" />
+          <Tab label="Templates" value="Templates" />
+          <Tab label="History" value="History" />
         </Tabs>
 
+        {tab === "Dashboard" && <DashboardPage />}
         {tab === "Compose" && <ComposePage />}
         {tab === "Profiles" && <ProfilesPage />}
         {tab === "Templates" && <TemplatesPage />}

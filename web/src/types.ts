@@ -43,4 +43,31 @@ export interface ApplicationRecord {
   toEmail: string;
   subject: string;
   sentAt: string;
+  opened: boolean;
+  openCount: number;
+  firstOpenedAt: string | null;
+  lastOpenedAt: string | null;
+}
+
+export interface DashboardDay {
+  date: string;
+  sent: number;
+  opened: number;
+}
+
+export interface CompanyStats {
+  company: string;
+  sent: number;
+  opened: number;
+}
+
+export interface DashboardSummary {
+  totalSent: number;
+  opened: number;
+  unopened: number;
+  totalOpens: number;
+  openRate: number;
+  dailyActivity: DashboardDay[];
+  topCompanies: CompanyStats[];
+  recentApplications: ApplicationRecord[];
 }

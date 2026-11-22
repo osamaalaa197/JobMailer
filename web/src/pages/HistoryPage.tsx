@@ -63,7 +63,8 @@ export default function HistoryPage() {
         )}
       </Stack>
       <Typography color="text.secondary" sx={{ mb: 3 }}>
-        Every application sent through JobMailer is recorded here.
+        Every application sent through JobMailer is recorded here. Open status is approximate and
+        depends on the recipient loading images.
       </Typography>
 
       {loading ? (
@@ -74,7 +75,7 @@ export default function HistoryPage() {
         </Alert>
       ) : (
         <TableContainer component={Paper} variant="outlined">
-          <Table size="small" sx={{ minWidth: 640 }}>
+          <Table size="small" sx={{ minWidth: 820 }}>
             <TableHead>
               <TableRow>
                 <TableCell>Company</TableCell>
@@ -82,6 +83,9 @@ export default function HistoryPage() {
                 <TableCell>Profile</TableCell>
                 <TableCell>To</TableCell>
                 <TableCell>Sent</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell>Opens</TableCell>
+                <TableCell>Last opened</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -92,6 +96,18 @@ export default function HistoryPage() {
                   <TableCell>{application.profileTitle}</TableCell>
                   <TableCell>{application.toEmail}</TableCell>
                   <TableCell>{formatDate(application.sentAt)}</TableCell>
+                  <TableCell>
+                    <Chip
+                      label={application.opened ? "Opened" : "Not opened"}
+                      color={application.opened ? "success" : "default"}
+                      size="small"
+                      variant={application.opened ? "filled" : "outlined"}
+                    />
+                  </TableCell>
+                  <TableCell>{application.openCount}</TableCell>
+                  <TableCell>
+                    {application.lastOpenedAt ? formatDate(application.lastOpenedAt) : "—"}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

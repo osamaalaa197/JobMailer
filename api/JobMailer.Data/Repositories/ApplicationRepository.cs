@@ -17,4 +17,21 @@ public sealed class ApplicationRepository(AppDbContext db) : IApplicationReposit
 
     public Task SaveChangesAsync(CancellationToken cancellationToken = default) =>
         db.SaveChangesAsync(cancellationToken);
+
+    public async Task<bool> RecordOpenAsync(
+        string trackingToken,
+        DateTime openedAt,
+        CancellationToken cancellationToken = default)
+    {
+        var updated = await db.Applications
+            .Where(x => x.TrackingToken == trackingToken)
+            .ExecuteUpdateAsync(
+                setters => setters
+                    .SetProperty(x => x.OpenCount, x => x.OpenCount + 1)
+                    .SetProperty(x => x.FirstOpenedAt, x => x.FirstOpenedAt ?? openedAt)
+                    .SetProperty(x => x.LastOpenedAt, openedAt),
+                cancellationToken);
+
+        return updated > 0;
+    }
 }

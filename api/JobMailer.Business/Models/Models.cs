@@ -51,4 +51,22 @@ public sealed record ApplicationDto(
     string ProfileTitle,
     string ToEmail,
     string Subject,
-    DateTime SentAt);
+    DateTime SentAt,
+    bool Opened,
+    int OpenCount,
+    DateTime? FirstOpenedAt,
+    DateTime? LastOpenedAt);
+
+public sealed record DashboardDayDto(DateTime Date, int Sent, int Opened);
+
+public sealed record CompanyStatsDto(string Company, int Sent, int Opened);
+
+public sealed record DashboardDto(
+    int TotalSent,
+    int Opened,
+    int Unopened,
+    int TotalOpens,
+    double OpenRate,
+    IReadOnlyList<DashboardDayDto> DailyActivity,
+    IReadOnlyList<CompanyStatsDto> TopCompanies,
+    IReadOnlyList<ApplicationDto> RecentApplications);

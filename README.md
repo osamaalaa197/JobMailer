@@ -2,7 +2,8 @@
 
 JobMailer sends job-application emails from the user's own Gmail account. Users keep multiple
 professional profiles (contact details + CV), pick a pre-built email template, preview the rendered
-message, and send it with the CV attached through the Gmail API.
+message, and send it with the CV attached through the Gmail API. A dashboard tracks applications,
+email opens, top companies, and recent activity.
 
 ## Technology stack
 
@@ -174,7 +175,12 @@ them explicitly is recommended:
 Google__RedirectUri=https://your-domain.com/api/auth/google/callback
 Web__Url=https://your-domain.com
 Cors=https://your-domain.com
+Tracking__PublicBaseUrl=https://your-domain.com
 ```
+
+`Tracking__PublicBaseUrl` must be the public origin recipients can reach. It is used to build the
+1×1 open-tracking image URL. When it is empty, `Web__Url` is used. A `localhost` URL will not work
+for real recipients because their email client cannot reach your machine.
 
 If the API is hosted on a different domain, set `VITE_API_URL` to its absolute URL before building
 the web app, and set the three values above to match that deployment:
@@ -242,7 +248,9 @@ renewal. `prompt=consent` guarantees a new refresh token on every sign-in.
 | DELETE | `/api/templates/{id}` | Delete one of the current user's templates |
 | POST | `/api/email/render` | Render subject/body placeholders |
 | POST | `/api/email/send` | Send via Gmail with the profile CV attached |
-| GET | `/api/applications` | Sent-application history |
+| GET | `/api/applications` | Sent-application history with open status |
+| GET | `/api/dashboard?days=30` | Dashboard metrics and recent activity |
+| GET | `/api/tracking/open/{token}` | Public 1×1 pixel that records an email open |
 
 ### Template placeholders
 
@@ -268,7 +276,24 @@ it is left blank, the placeholder becomes `Hiring Manager`.
 new users start with the Full Stack and GIS defaults.
 
 `Applications` — `Id`, `UserId` (FK), `ProfileId`, `ProfileTitle`, `Company`, `JobTitle`, `ToEmail`,
-`Subject`, `SentAt`.
+`Subject`, `SentAt`, `TrackingToken`, `FirstOpenedAt`, `LastOpenedAt`, `OpenCount`.
+
+### Email open tracking
+
+Outgoing HTML emails include a unique 1×1 tracking image. When the recipient loads images, the
+public `/api/tracking/open/{token}` endpoint records the first open, the latest open, and the total
+open count. The dashboard treats an application as opened when at least one open event has been
+recorded.
+
+Gmail does not expose true read receipts through the Gmail API. Open tracking is approximate:
+
+- It depends on the email client loading remote images.
+- Privacy tools, image proxies, and security scanners may trigger or suppress opens.
+- Only applications sent after tracking was deployed have a tracking token.
+- Tracking URLs should use HTTPS in production.
+
+The dashboard totals, top companies, and recent applications are all-time figures. The `days`
+parameter controls the daily activity chart.
 
 ## Security notes
 

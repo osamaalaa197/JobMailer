@@ -23,6 +23,19 @@ public static class DependencyInjection
             .Validate(x => Encoding.UTF8.GetByteCount(x.Key) >= 32, "Jwt:Key must be at least 32 characters long.")
             .ValidateOnStart();
 
+        services.AddOptions<TrackingOptions>()
+            .Bind(configuration.GetSection(TrackingOptions.SectionName))
+            .PostConfigure(options =>
+            {
+                if (string.IsNullOrWhiteSpace(options.PublicBaseUrl))
+                {
+                    var webUrl = configuration["Web:Url"];
+                    options.PublicBaseUrl = string.IsNullOrWhiteSpace(webUrl)
+                        ? "http://localhost:5080"
+                        : webUrl;
+                }
+            });
+
         services.AddHttpClient("google", client =>
         {
             client.Timeout = TimeSpan.FromSeconds(15);
@@ -35,6 +48,8 @@ public static class DependencyInjection
         services.AddScoped<ITemplateService, TemplateService>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IApplicationService, ApplicationService>();
+        services.AddScoped<IDashboardService, DashboardService>();
+        services.AddScoped<ITrackingService, TrackingService>();
 
         return services;
     }

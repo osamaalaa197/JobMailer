@@ -67,6 +67,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             entity.Property(x => x.JobTitle).HasMaxLength(255);
             entity.Property(x => x.ToEmail).HasMaxLength(255).IsRequired();
             entity.Property(x => x.Subject).HasMaxLength(400).IsRequired();
+            entity.Property(x => x.TrackingToken).HasMaxLength(64);
+            entity.HasIndex(x => x.TrackingToken)
+                .IsUnique()
+                .HasFilter("[TrackingToken] IS NOT NULL");
             entity.HasIndex(x => new { x.UserId, x.SentAt });
             entity.HasOne(x => x.User)
                 .WithMany(x => x.Applications)

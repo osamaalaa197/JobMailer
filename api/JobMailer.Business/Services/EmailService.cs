@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Mail;
 using Google;
 using Google.Apis.Auth.OAuth2;
@@ -25,9 +26,11 @@ public sealed class EmailService(
     IApplicationRepository applications,
     ITokenProtector protector,
     IOptions<GoogleOptions> googleOptions,
+    IOptions<TrackingOptions> trackingOptions,
     ILogger<EmailService> logger) : IEmailService
 {
     private readonly GoogleOptions _google = googleOptions.Value;
+    private readonly TrackingOptions _tracking = trackingOptions.Value;
 
     public async Task<ApplicationDto> SendAsync(
         int userId,
@@ -57,7 +60,8 @@ public sealed class EmailService(
 
         var accessToken = await GetAccessTokenAsync(user, cancellationToken);
 
-        using var message = BuildMessage(user, profile, request);
+        var trackingToken = Guid.NewGuid().ToString("N");
+        using var message = BuildMessage(user, profile, request, BuildTrackingUrl(trackingToken));
         using var stream = new MemoryStream();
         message.WriteTo(stream);
 
@@ -95,7 +99,8 @@ public sealed class EmailService(
             JobTitle = string.IsNullOrWhiteSpace(request.JobTitle) ? profile.Title : request.JobTitle.Trim(),
             ToEmail = request.To.Trim(),
             Subject = request.Subject.Trim(),
-            SentAt = DateTime.UtcNow
+            SentAt = DateTime.UtcNow,
+            TrackingToken = trackingToken
         };
 
         await applications.AddAsync(application, cancellationToken);
@@ -108,7 +113,11 @@ public sealed class EmailService(
             application.ProfileTitle,
             application.ToEmail,
             application.Subject,
-            application.SentAt);
+            application.SentAt,
+            application.OpenCount > 0,
+            application.OpenCount,
+            application.FirstOpenedAt,
+            application.LastOpenedAt);
     }
 
     private async Task<string> GetAccessTokenAsync(User user, CancellationToken cancellationToken)
@@ -160,7 +169,11 @@ public sealed class EmailService(
         return refreshed.AccessToken;
     }
 
-    private static MimeMessage BuildMessage(User user, Profile profile, SendEmailRequest request)
+    private static MimeMessage BuildMessage(
+        User user,
+        Profile profile,
+        SendEmailRequest request,
+        string trackingUrl)
     {
         var message = new MimeMessage();
         message.From.Add(new MailboxAddress(user.FullName, user.Email));
@@ -173,7 +186,11 @@ public sealed class EmailService(
         message.To.Add(MailboxAddress.Parse(request.To.Trim()));
         message.Subject = request.Subject.Trim();
 
-        var body = new BodyBuilder { TextBody = request.Body };
+        var body = new BodyBuilder
+        {
+            TextBody = request.Body,
+            HtmlBody = BuildHtmlBody(request.Body, trackingUrl)
+        };
 
         if (!string.IsNullOrWhiteSpace(profile.CvBase64))
         {
@@ -186,6 +203,30 @@ public sealed class EmailService(
 
         message.Body = body.ToMessageBody();
         return message;
+    }
+
+    private string BuildTrackingUrl(string trackingToken)
+    {
+        var baseUrl = _tracking.PublicBaseUrl.Trim().TrimEnd('/');
+        return $"{baseUrl}/api/tracking/open/{Uri.EscapeDataString(trackingToken)}";
+    }
+
+    private static string BuildHtmlBody(string text, string trackingUrl)
+    {
+        var encoded = WebUtility.HtmlEncode(text)
+            .Replace("\r\n", "\n")
+            .Replace('\r', '\n')
+            .Replace("\n", "<br />");
+
+        return $"""
+            <!DOCTYPE html>
+            <html>
+            <body style="font-family: Arial, Helvetica, sans-serif; font-size: 14px; line-height: 1.5; color: #222;">
+            <div>{encoded}</div>
+            <img src="{WebUtility.HtmlEncode(trackingUrl)}" width="1" height="1" alt="" style="display:block; width:1px; height:1px; border:0; opacity:0;" />
+            </body>
+            </html>
+            """;
     }
 
     private static string GetMimeType(string fileName) =>
