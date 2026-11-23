@@ -41,6 +41,17 @@ public static class DependencyInjection
             client.Timeout = TimeSpan.FromSeconds(15);
         });
 
+        services.AddOptions<AiOptions>()
+            .Bind(configuration.GetSection(AiOptions.SectionName))
+            .ValidateOnStart();
+
+        services.AddHttpClient("ai", client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(45);
+        });
+
+        services.AddScoped<IAiEmailEnhancer, OpenAiCompatibleEmailEnhancer>();
+
         services.AddSingleton<ITokenProtector, DataProtectionTokenProtector>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IAuthService, AuthService>();

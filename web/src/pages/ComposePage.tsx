@@ -5,6 +5,8 @@ import {
   Button,
   Card,
   CardContent,
+  Checkbox,
+  FormControlLabel,
   Grid,
   LinearProgress,
   MenuItem,
@@ -27,6 +29,8 @@ interface ComposeForm {
   jobTitle: string;
   receiverName: string;
   to: string;
+  jobDescription: string;
+  useAi: boolean;
 }
 
 const emptyForm: ComposeForm = {
@@ -35,7 +39,9 @@ const emptyForm: ComposeForm = {
   company: "",
   jobTitle: "",
   receiverName: "",
-  to: ""
+  to: "",
+  jobDescription: "",
+  useAi: true
 };
 
 export default function ComposePage() {
@@ -136,7 +142,9 @@ export default function ComposePage() {
         templateId: form.templateId,
         company: form.company,
         jobTitle: form.jobTitle,
-        receiverName: form.receiverName
+        receiverName: form.receiverName,
+        jobDescription: form.jobDescription,
+        useAi: form.useAi && form.jobDescription.trim().length > 0
       });
       setPreview(data);
     } catch (error) {
@@ -269,6 +277,34 @@ export default function ComposePage() {
                 helperText="Defaults to the profile title"
                 value={form.jobTitle}
                 onChange={handleJobTitleChange}
+              />
+            </Grid>
+
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Job description (optional)"
+                placeholder="Paste the job description to tailor the email"
+                value={form.jobDescription}
+                onChange={(event) => {
+                  setForm((current) => ({ ...current, jobDescription: event.target.value }));
+                  setPreview(null);
+                }}
+                multiline
+                minRows={5}
+              />
+            </Grid>
+
+            <Grid item xs={12}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={form.useAi}
+                    onChange={(event) => setForm((current) => ({ ...current, useAi: event.target.checked }))}
+                    disabled={!form.jobDescription.trim()}
+                  />
+                }
+                label="Use AI to tailor the email to the job description"
               />
             </Grid>
 

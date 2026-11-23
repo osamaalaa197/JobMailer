@@ -32,7 +32,9 @@ public sealed record RenderEmailRequest(
     int TemplateId,
     string? Company,
     string? JobTitle,
-    string? ReceiverName = null);
+    string? ReceiverName = null,
+    string? JobDescription = null,
+    bool UseAi = false);
 
 public sealed record RenderedEmail(string Subject, string Body);
 

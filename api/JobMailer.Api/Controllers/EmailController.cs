@@ -12,7 +12,8 @@ namespace JobMailer.Api.Controllers;
 [Route("api/email")]
 public sealed class EmailController(
     ITemplateService templates,
-    IEmailService email) : ControllerBase
+    IEmailService email,
+    IAiEmailEnhancer aiEnhancer) : ControllerBase
 {
     [HttpPost("render")]
     public async Task<ActionResult<RenderedEmail>> Render(
@@ -26,8 +27,30 @@ public sealed class EmailController(
                 request.TemplateId,
                 request.Company,
                 request.JobTitle,
-                request.ReceiverName),
+                request.ReceiverName,
+                request.JobDescription,
+                request.UseAi),
             cancellationToken);
+
+        if (request.UseAi
+            && !string.IsNullOrWhiteSpace(request.JobDescription))
+        {
+            try
+            {
+                rendered = await aiEnhancer.EnhanceAsync(
+                    rendered.Subject,
+                    rendered.Body,
+                    request.JobDescription!,
+                    request.Company,
+                    request.JobTitle,
+                    cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                // Keep the original rendered email when AI is unavailable.
+                Console.WriteLine($"AI enhancement skipped: {ex.Message}");
+            }
+        }
 
         return Ok(rendered);
     }
